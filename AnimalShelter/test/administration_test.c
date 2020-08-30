@@ -6,7 +6,8 @@ ANIMAL animalArray[MaxArrayLength];
 ANIMAL animal;
 ANIMAL foundAnimals[MaxArrayLength];
 
-short removed, found = 0;
+int animalCount = 0;
+short removed = 0, found = 0;
 
 void setUp(void)
 {
@@ -23,19 +24,33 @@ void tearDown(void)
     found = 0;
 }
 
-void test_EmptyTestFail(void)
+void test_AnimalAdded(void)
 {
     strcpy(animal.Name, "John");
     animal.Species = 1;
     animal.Age = 5;
-    addAnimal(&animal, animalArray);
+    int code = addAnimal(&animal, animalArray, &animalCount);
 
+    TEST_ASSERT_EQUAL(0, code);
+    TEST_ASSERT_EQUAL_STRING("John", animalArray[0].Name);
     TEST_ASSERT_NOT_EQUAL(0, animalCount);
 }
 
-void test_EmptyTestPass(void)
+void test_NoAnimals(void)
 {
     TEST_ASSERT_EQUAL(0, animalCount);
+}
+
+void test_WrongSpeciesNoAnimalAdded(void)
+{
+    strcpy(animal.Name, "John");
+    animal.Species = 5;
+    animal.Age = 5;
+    int code = addAnimal(&animal, animalArray, &animalCount);
+
+    TEST_ASSERT_EQUAL(0, code);
+    TEST_ASSERT_EQUAL_STRING("John", animalArray[0].Name);
+    TEST_ASSERT_NOT_EQUAL(0, animalCount);
 }
 
 void test_AnimalsCountFail(void)
@@ -43,12 +58,12 @@ void test_AnimalsCountFail(void)
     strcpy(animal.Name, "John");
     animal.Species = 1;
     animal.Age = 5;
-    addAnimal(&animal, animalArray);
+    addAnimal(&animal, animalArray, &animalCount);
 
     strcpy(animal.Name, "Franklin");
     animal.Species = 1;
     animal.Age = 5;
-    addAnimal(&animal, animalArray);
+    addAnimal(&animal, animalArray, &animalCount);
 
     TEST_ASSERT_NOT_EQUAL(1, animalCount);
 }
@@ -58,12 +73,12 @@ void test_AnimalsCountPass(void)
     strcpy(animal.Name, "John");
     animal.Species = 1;
     animal.Age = 5;
-    addAnimal(&animal, animalArray);
+    addAnimal(&animal, animalArray, &animalCount);
 
     strcpy(animal.Name, "Franklin");
     animal.Species = 1;
     animal.Age = 5;
-    addAnimal(&animal, animalArray);
+    addAnimal(&animal, animalArray, &animalCount);
 
     TEST_ASSERT_EQUAL(2, animalCount);
 }
@@ -73,7 +88,8 @@ void test_AnimalSpeciesFail(void)
     strcpy(animal.Name, "John");
     animal.Species = 2;
     animal.Age = 5;
-    addAnimal(&animal, animalArray);
+    // TO DO: check return values and modified variables
+    addAnimal(&animal, animalArray, &animalCount);
 
     TEST_ASSERT_NOT_EQUAL(1, animal.Species);
 }
@@ -83,19 +99,19 @@ void test_AnimalSpeciesPass(void)
     strcpy(animal.Name, "John");
     animal.Species = 1;
     animal.Age = 5;
-    addAnimal(&animal, animalArray);
+    addAnimal(&animal, animalArray, &animalCount);
 
     TEST_ASSERT_EQUAL(1, animal.Species);
 }
 
-void test_AnimalRemove1Pass(void)
+void test_AnimalRemoveExistingAnimalPass(void)
 {
     strcpy(animal.Name, "John");
     animal.Species = 1;
     animal.Age = 5;
-    addAnimal(&animal, animalArray);
+    addAnimal(&animal, animalArray, &animalCount);
 
-    removeAnimal("John", animalArray, &removed);
+    removeAnimalByName("John", animalArray, &animalCount, &removed);
 
     TEST_ASSERT_EQUAL(1, removed);
 }
@@ -105,14 +121,14 @@ void test_AnimalRemove2Pass(void)
     strcpy(animal.Name, "John");
     animal.Species = 1;
     animal.Age = 5;
-    addAnimal(&animal, animalArray);
+    addAnimal(&animal, animalArray, &animalCount);
 
     strcpy(animal.Name, "John");
     animal.Species = 1;
     animal.Age = 5;
-    addAnimal(&animal, animalArray);
+    addAnimal(&animal, animalArray, &animalCount);
 
-    removeAnimal("John", animalArray, &removed);
+    removeAnimalByName("John", animalArray, &animalCount, &removed);
 
     TEST_ASSERT_EQUAL(2, removed);
 }
@@ -122,14 +138,14 @@ void test_AnimalRemoveOnlyOccurrencesPass(void)
     strcpy(animal.Name, "John");
     animal.Species = 1;
     animal.Age = 5;
-    addAnimal(&animal, animalArray);
+    addAnimal(&animal, animalArray, &animalCount);
 
     strcpy(animal.Name, "Johnny");
     animal.Species = 1;
     animal.Age = 5;
-    addAnimal(&animal, animalArray);
+    addAnimal(&animal, animalArray, &animalCount);
 
-    removeAnimal("John", animalArray, &removed);
+    removeAnimalByName("John", animalArray, &animalCount, &removed);
 
     TEST_ASSERT_EQUAL(1, removed);
 }
@@ -139,14 +155,14 @@ void test_TestCountAfterRemovePass(void)
     strcpy(animal.Name, "John");
     animal.Species = 1;
     animal.Age = 5;
-    addAnimal(&animal, animalArray);
+    addAnimal(&animal, animalArray, &animalCount);
 
     strcpy(animal.Name, "Johnny");
     animal.Species = 1;
     animal.Age = 5;
-    addAnimal(&animal, animalArray);
+    addAnimal(&animal, animalArray, &animalCount);
 
-    removeAnimal("John", animalArray, &removed);
+    removeAnimalByName("John", animalArray, &animalCount, &removed);
 
     TEST_ASSERT_EQUAL(1, animalCount);
 }
@@ -156,14 +172,14 @@ void test_TestReturnCodeAfterRemovePass(void)
     strcpy(animal.Name, "John");
     animal.Species = 1;
     animal.Age = 5;
-    addAnimal(&animal, animalArray);
+    addAnimal(&animal, animalArray, &animalCount);
 
     strcpy(animal.Name, "Johnny");
     animal.Species = 1;
     animal.Age = 5;
-    addAnimal(&animal, animalArray);
+    addAnimal(&animal, animalArray, &animalCount);
 
-    int code = removeAnimal("John", animalArray, &removed);
+    int code = removeAnimalByName("John", animalArray, &animalCount, &removed);
 
     TEST_ASSERT_EQUAL(0, code);
 }
@@ -173,14 +189,14 @@ void test_TestReturnCodeAfterRemoveFail(void)
     strcpy(animal.Name, "Johnny");
     animal.Species = 1;
     animal.Age = 5;
-    addAnimal(&animal, animalArray);
+    addAnimal(&animal, animalArray, &animalCount);
 
     strcpy(animal.Name, "Johnny");
     animal.Species = 1;
     animal.Age = 5;
-    addAnimal(&animal, animalArray);
+    addAnimal(&animal, animalArray, &animalCount);
 
-    int code = removeAnimal("John", animalArray, &removed);
+    int code = removeAnimalByName("John", animalArray, &animalCount, &removed);
 
     TEST_ASSERT_EQUAL(-1, code);
 }
@@ -190,19 +206,19 @@ void test_TestCorrectRemovePass(void)
     strcpy(animal.Name, "Johnny");
     animal.Species = 1;
     animal.Age = 5;
-    addAnimal(&animal, animalArray);
+    addAnimal(&animal, animalArray, &animalCount);
 
     strcpy(animal.Name, "John");
     animal.Species = 1;
     animal.Age = 5;
-    addAnimal(&animal, animalArray);
+    addAnimal(&animal, animalArray, &animalCount);
 
     strcpy(animal.Name, "Johnson");
     animal.Species = 1;
     animal.Age = 5;
-    addAnimal(&animal, animalArray);
+    addAnimal(&animal, animalArray, &animalCount);
 
-    removeAnimal("John", animalArray, &removed);
+    removeAnimalByName("John", animalArray, &animalCount, &removed);
 
     TEST_ASSERT_EQUAL_STRING("Johnny", animalArray[0].Name);
     TEST_ASSERT_EQUAL_STRING("Johnson", animalArray[1].Name);
@@ -213,19 +229,19 @@ void test_TestCorrectRemoveEndPass(void)
     strcpy(animal.Name, "Johnny");
     animal.Species = 1;
     animal.Age = 5;
-    addAnimal(&animal, animalArray);
+    addAnimal(&animal, animalArray, &animalCount);
 
     strcpy(animal.Name, "John");
     animal.Species = 1;
     animal.Age = 5;
-    addAnimal(&animal, animalArray);
+    addAnimal(&animal, animalArray, &animalCount);
 
     strcpy(animal.Name, "Johnson");
     animal.Species = 1;
     animal.Age = 5;
-    addAnimal(&animal, animalArray);
+    addAnimal(&animal, animalArray, &animalCount);
 
-    removeAnimal("Johnson", animalArray, &removed);
+    removeAnimalByName("Johnson", animalArray, &animalCount, &removed);
 
     TEST_ASSERT_EQUAL_STRING("Johnny", animalArray[0].Name);
     TEST_ASSERT_EQUAL_STRING("John", animalArray[1].Name);
@@ -236,19 +252,19 @@ void test_TestCorrectRemoveBeginPass(void)
     strcpy(animal.Name, "Johnny");
     animal.Species = 1;
     animal.Age = 5;
-    addAnimal(&animal, animalArray);
+    addAnimal(&animal, animalArray, &animalCount);
 
     strcpy(animal.Name, "John");
     animal.Species = 1;
     animal.Age = 5;
-    addAnimal(&animal, animalArray);
+    addAnimal(&animal, animalArray, &animalCount);
 
     strcpy(animal.Name, "Johnson");
     animal.Species = 1;
     animal.Age = 5;
-    addAnimal(&animal, animalArray);
+    addAnimal(&animal, animalArray, &animalCount);
 
-    removeAnimal("Johnny", animalArray, &removed);
+    removeAnimalByName("Johnny", animalArray, &animalCount, &removed);
 
     TEST_ASSERT_EQUAL_STRING("John", animalArray[0].Name);
     TEST_ASSERT_EQUAL_STRING("Johnson", animalArray[1].Name);
@@ -259,19 +275,19 @@ void test_TestAnimalFindCountPass(void)
     strcpy(animal.Name, "Johnny");
     animal.Species = 1;
     animal.Age = 5;
-    addAnimal(&animal, animalArray);
+    addAnimal(&animal, animalArray, &animalCount);
 
     strcpy(animal.Name, "Johnny");
     animal.Species = 1;
     animal.Age = 5;
-    addAnimal(&animal, animalArray);
+    addAnimal(&animal, animalArray, &animalCount);
 
     strcpy(animal.Name, "Johnson");
     animal.Species = 1;
     animal.Age = 5;
-    addAnimal(&animal, animalArray);
+    addAnimal(&animal, animalArray, &animalCount);
 
-    findAnimal("Johnny", animalArray, foundAnimals, &found);
+    findAnimal("Johnny", animalArray, animalCount, foundAnimals, &found);
 
     TEST_ASSERT_EQUAL(2, found);
 }
@@ -281,19 +297,19 @@ void test_TestAnimalFindPass(void)
     strcpy(animal.Name, "Johnny");
     animal.Species = 1;
     animal.Age = 5;
-    addAnimal(&animal, animalArray);
+    addAnimal(&animal, animalArray, &animalCount);
 
     strcpy(animal.Name, "Johnny");
     animal.Species = 1;
     animal.Age = 5;
-    addAnimal(&animal, animalArray);
+    addAnimal(&animal, animalArray, &animalCount);
 
     strcpy(animal.Name, "Johnson");
     animal.Species = 1;
     animal.Age = 5;
-    addAnimal(&animal, animalArray);
+    addAnimal(&animal, animalArray, &animalCount);
 
-    findAnimal("Johnny", animalArray, foundAnimals, &found);
+    findAnimal("Johnny", animalArray, animalCount, foundAnimals, &found);
 
     TEST_ASSERT_EQUAL_STRING("Johnny", foundAnimals[0].Name);
     TEST_ASSERT_EQUAL_STRING("Johnny", foundAnimals[1].Name);
@@ -304,9 +320,9 @@ void test_TestAnimalFindReturnCodePass(void)
     strcpy(animal.Name, "Johnny");
     animal.Species = 1;
     animal.Age = 5;
-    addAnimal(&animal, animalArray);
+    addAnimal(&animal, animalArray, &animalCount);
 
-    int code = findAnimal("Johnny", animalArray, foundAnimals, &found);
+    int code = findAnimal("Johnny", animalArray, animalCount, foundAnimals, &found);
 
     TEST_ASSERT_EQUAL(0, code);
 }
@@ -316,9 +332,9 @@ void test_TestAnimalFindReturnCodeFail(void)
     strcpy(animal.Name, "Johnny");
     animal.Species = 1;
     animal.Age = 5;
-    addAnimal(&animal, animalArray);
+    addAnimal(&animal, animalArray, &animalCount);
 
-    int code = findAnimal("John", animalArray, foundAnimals, &found);
+    int code = findAnimal("John", animalArray, animalCount, foundAnimals, &found);
 
     TEST_ASSERT_EQUAL(-1, code);
 }
@@ -329,10 +345,10 @@ void test_TestEmptySpaceFail(void)
         strcpy(animal.Name, "Johnny");
         animal.Species = 1;
         animal.Age = 5;
-        addAnimal(&animal, animalArray);
+        addAnimal(&animal, animalArray, &animalCount);
     }
 
-    TEST_ASSERT_EQUAL(-1, isFreeSpace());
+    TEST_ASSERT_EQUAL(-1, isFreeSpace(animalCount));
 }
 
 void test_TestEmptySpacePass(void)
@@ -341,23 +357,23 @@ void test_TestEmptySpacePass(void)
         strcpy(animal.Name, "Johnny");
         animal.Species = 1;
         animal.Age = 5;
-        addAnimal(&animal, animalArray);
+        addAnimal(&animal, animalArray, &animalCount);
     }
 
-    TEST_ASSERT_EQUAL(0, isFreeSpace());
+    TEST_ASSERT_EQUAL(0, isFreeSpace(animalCount));
 }
 
 int main (void)
 {
     UnityBegin();
 
-    RUN_TEST(test_EmptyTestFail, 1);
-	RUN_TEST(test_EmptyTestPass, 2);
+    RUN_TEST(test_AnimalAdded, 1);
+	RUN_TEST(test_NoAnimals, 2);
     RUN_TEST(test_AnimalsCountFail, 3);
     RUN_TEST(test_AnimalsCountPass, 4);
     RUN_TEST(test_AnimalSpeciesFail, 5);
     RUN_TEST(test_AnimalSpeciesPass, 6);
-    RUN_TEST(test_AnimalRemove1Pass, 7);
+    RUN_TEST(test_AnimalRemoveExistingAnimalPass, 7);
     RUN_TEST(test_AnimalRemove2Pass, 8);
     RUN_TEST(test_AnimalRemoveOnlyOccurrencesPass, 9);
     RUN_TEST(test_TestCountAfterRemovePass, 10);
@@ -372,6 +388,7 @@ int main (void)
     RUN_TEST(test_TestAnimalFindReturnCodePass, 19);
     RUN_TEST(test_TestEmptySpaceFail, 20);
     RUN_TEST(test_TestEmptySpacePass, 21);
+    RUN_TEST(test_WrongSpeciesNoAnimalsAdded, 22);
 
     return UnityEnd();
 }
